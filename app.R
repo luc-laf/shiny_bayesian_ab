@@ -116,8 +116,8 @@ server  <- function(input, output){
   b_dens <- dbeta(probs, 250, 1000)
   
   output$prob_plot <-renderPlot({
-    ggplot() + geom_line(aes(probs,a_dens))+geom_line(aes(probs,b_dens))
-    
+    ggplot() + geom_line(aes(probs,a_dens, color="red"))+geom_line(aes(probs,b_dens, color="blue"))
+
   })
   
   #when button pressed check entries are ok and if they are assign list of values to imagen
