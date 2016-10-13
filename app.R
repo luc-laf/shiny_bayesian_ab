@@ -1,5 +1,5 @@
 library(shiny)
-
+library(ggplot2)
 
 
 bayesian_test <- function(prior_success=1, prior_vol=1, v1_success, v1_vol, v2_success, thresh=0, v2_vol, n.trials=100000){
@@ -71,22 +71,22 @@ ui<- fluidPage(
   #Numeric input boxes
   fluidRow(
             column(3, align="center",
-                   textInput(inputId =  "acon",
+                   textInput(inputId =  "a_conv",
                              label = "Variant A Conversions",
                              width="80%"),
                    style = "font-size: 12px; line-height: 2.1;"),
             column(3, align="center",
-                   textInput(inputId =  "bcon",
+                   textInput(inputId =  "b_conv",
                              label = "Variant B Conversions",
                              width="80%"),
                    style = "font-size: 12px; line-height: 2.1;"),
             column(3, align="center",
-                   passwordInput(inputId =  "avol",
+                   passwordInput(inputId =  "a_vol",
                                  label = "Variant A Volume",
                                  width="80%"),
                    style = "font-size: 12px; line-height: 2.1;"),
             column(3, align="center",
-                   passwordInput(inputId =  "bvol",
+                   passwordInput(inputId =  "b_vol",
                                  label = "Variant B Volume",
                                  width="80%"),
                    style = "font-size: 12px; line-height: 2.1;")
@@ -103,7 +103,7 @@ ui<- fluidPage(
   #Picture display
   fluidRow(
     column(1),
-    column(10,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("display.image")),
+    column(10,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot")),
     column(1)
     )
              
@@ -111,7 +111,15 @@ ui<- fluidPage(
 
 server  <- function(input, output){
   
-
+  probs <- seq(0,1,length=1000)
+  a_dens <- dbeta(probs, 200, 1000)
+  b_dens <- dbeta(probs, 250, 1000)
+  
+  output$prob_plot <-renderPlot({
+    ggplot() + geom_line(aes(probs,a_dens))+geom_line(aes(probs,b_dens))
+    
+  })
+  
   #when button pressed check entries are ok and if they are assign list of values to imagen
   imagen <- eventReactive(input$go,{
     validate(
