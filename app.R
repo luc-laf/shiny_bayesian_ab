@@ -1,5 +1,53 @@
 library(shiny)
 
+
+
+bayesian_test <- function(prior_success=1, prior_vol=1, v1_success, v1_vol, v2_success, thresh=0, v2_vol, n.trials=100000){
+  
+  #parameters for the posterior Beta distibution
+  
+  v1_beta.A <- v1_success + prior_success
+  v1_beta.B <- (v1_vol - v1_success) + (prior_vol - prior_success)
+  v2_beta.A <- v2_success + prior_success
+  v2_beta.B <- (v2_vol - v2_success) + (prior_vol - prior_success)
+  
+  #sample from beta distributions
+  v1_rbeta <- rbeta(n.trials, v1_beta.A , v1_beta.B)
+  v2_rbeta <- rbeta(n.trials, v2_beta.A , v2_beta.B)
+  
+  #randomly sample from the beta distributions for monte carlo integration of distribution of difference
+  v1wins <- sum(v1_rbeta-v2_rbeta > thresh)/n.trials
+  v2wins <- sum(v2_rbeta-v1_rbeta > thresh)/n.trials
+  practicalEquiv <- 1 - (v1wins + v2wins)
+  
+  
+  #distributions of results
+  results_p_dist <- c(practicalEquiv, v1wins, v2wins)
+  
+  #keep mean for now change to max aposteriori pred later
+  map_diff <- abs(mean(v1wins)-mean(v2wins))
+  
+  
+  if(v1wins>v2wins &&  map_diff>thresh){
+    winner = 1
+  } else if(v2wins>v1wins &&  map_diff>thresh){
+    winner = 2
+  } else {
+    winner = 0
+    return(val)
+    
+  }
+  results <- list("winner"=winner, 
+                  "v1_beta.A"=v1_beta.A, "v1_beta.B"=v1_beta.B,
+                  "v2_beta.A"=v1_beta.A, "v2_beta.B"=v1_beta.B,
+                  "dist"=results_p_dist, "diff"=map_diff)
+  return(results)
+  
+}
+
+
+
+
 ui<- fluidPage(
   theme = "bootstrap.css",
   
@@ -62,23 +110,8 @@ ui<- fluidPage(
 ))
 
 server  <- function(input, output){
-  rvs <- reactiveValues(default=0)
-  observeEvent(input$go, {rvs$default <- input$go })
-  imagen <- eventReactive(input$go,{
-    validate(
-      need(as.single(input$age)>=18 & as.single(input$age)<=90, "Check the age you entered!")
-    )
-    validate(
-      need(as.single(input$children)>=0 & as.single(input$children)<10, "Check your entry for number of children!")
-    )
-    validate(
-      need(as.single(input$income)>0, "Check the income entered!")
-    )
-    validate(
-      need(as.single(input$houseprice)>50000, "Check the house price entered!")
-    )
-    list(age = as.single(input$age), income=as.single(input$income), children=as.single(input$children), houseprice=as.single(input$houseprice))
-  })
+  
+
   #when button pressed check entries are ok and if they are assign list of values to imagen
   imagen <- eventReactive(input$go,{
     validate(
@@ -97,36 +130,7 @@ server  <- function(input, output){
   })
   
   #based on list of values choose whcih image to render
-  output$display.image <- renderImage({
-    if(rvs$default==0){
-      segment="first"
-    }else{
-      if(imagen()$age>=60){
-        segment <- "silverSurfers"
-      }else if((imagen()$income>=44000 | imagen()$houseprice>=335000) & imagen()$children==0 & imagen()$age>=18 & imagen()$age<=40){
-        segment <- "footlooseSingles"
-      }else if((imagen()$income>=44000 | imagen()$houseprice>=335000) & imagen()$children>0) {
-        segment <- "freeSpenders"
-      }else if(imagen()$income<44000 & imagen()$houseprice<335000 & imagen()$children==0 & imagen()$age>=18 & imagen()$age<=35){
-        segment <- "startingOut"
-      }else if(imagen()$income<44000 & imagen()$houseprice<335000 & imagen()$children>0 & imagen()$age>=41 & imagen()$age<=59){
-        segment <- "foundationFamilies"
-      }else if(imagen()$income<44000 & imagen()$houseprice<335000 & imagen()$children==0){
-        segment <- "midlifeJunction"
-      }else if(imagen()$income<44000 & imagen()$houseprice<335000){
-        segment <- "settlingDown"
-      }
-    }
-    image_file <- paste("",segment, ".png", sep="")
-    
-    return(list(
-      src = image_file,
-      filetype = "image/jpeg",
-      height = 400,
-      width = 532
-    ))
-    
-  }, deleteFile = FALSE)
+  
 }
 shinyAppDir(".")
 shinyApp(ui = ui, server = server)
