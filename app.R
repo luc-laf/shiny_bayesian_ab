@@ -2,14 +2,18 @@ library(shiny)
 library(ggplot2)
 
 
-bayesian_test <- function(prior_success=1, prior_vol=2, v1_success, v1_vol, v2_success, v2_vol, thresh=0, n.trials=100000){
+bayesian_test <- function(prior1_success=1, prior1_vol=2,
+                          prior2_success=1, prior2_vol=2,
+                          v1_success, v1_vol, 
+                          v2_success, v2_vol, 
+                          thresh=0, n.trials=100000){
   
   #parameters for the posterior Beta distibution
   
-  v1_beta.A <- v1_success + prior_success
-  v1_beta.B <- (v1_vol - v1_success) + (prior_vol - prior_success)
-  v2_beta.A <- v2_success + prior_success
-  v2_beta.B <- (v2_vol - v2_success) + (prior_vol - prior_success)
+  v1_beta.A <- v1_success + prior1_success
+  v1_beta.B <- (v1_vol - v1_success) + (prior1_vol - prior1_success)
+  v2_beta.A <- v2_success + prior2_success
+  v2_beta.B <- (v2_vol - v2_success) + (prior2_vol - prior2_success)
   
   #sample from beta distributions
   v1_rbeta <- rbeta(n.trials, v1_beta.A , v1_beta.B)
@@ -25,7 +29,7 @@ bayesian_test <- function(prior_success=1, prior_vol=2, v1_success, v1_vol, v2_s
   results_p_dist <- c(practicalEquiv, v1wins, v2wins)
   
   #keep mean for now change to max aposteriori pred later
-  map_diff <- abs(mean(v1wins)-mean(v2wins))
+  map_diff <- abs((v1_beta.A-1)/(v1_beta.A+v1_beta.B-2)-(v2_beta.A-1)/(v2_beta.A+v2_beta.B-2))
   
   
   if(v1wins>v2wins &&  map_diff>thresh){
@@ -65,67 +69,125 @@ ui<- fluidPage(
                                       font-size: 30px; color: #4F3685;")))),
 
 
-
   #Numeric input boxes
   fluidRow(
-            column(3, align="center",
+            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",
                    numericInput(inputId =  "a_conv",
                              label = "Variant A Conversions",
                              width="80%",
-                             value=1),
+                             value=10)),
                    style = "font-size: 12px; line-height: 2.1;"),
-            column(3, align="center",
+            column(3, align="center",wellPanel(align="left", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",
+                   numericInput(inputId =  "a_vol",
+                                label = "Variant A Volume", 
+                                width="80%",
+                                value=20)),
+                   style = "font-size: 12px; line-height: 2.1;"),
+            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #4F3685; max-width:600px",
                    numericInput(inputId =  "b_conv",
                              label = "Variant B Conversions",
                              width="80%",
-                             value=1),
+                             value=5)),
                    style = "font-size: 12px; line-height: 2.1;"),
-            column(3, align="center",
-                   numericInput(inputId =  "a_vol",
-                                 label = "Variant A Volume",
-                                 width="80%",
-                                 value=2),
-                   style = "font-size: 12px; line-height: 2.1;"),
-            column(3, align="center",
+            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #4F3685; max-width:600px",
                    numericInput(inputId =  "b_vol",
                                  label = "Variant B Volume",
                                  width="80%",
-                                value=2),
+                                value=20)),
                    style = "font-size: 12px; line-height: 2.1;")
       
   ),
+  
+  
+  fluidRow(column(4, titlePanel("Test Result="),  textOutput("result")),
+           column(4, titlePanel("Difference=")),
+           column(4, titlePanel("Difference")),
+           style = "font-family: 'Arial', cursive;
+                    font-weight: bold; line-height: 2.1;" ),
+  
   #Button to initate calculation
   column(12, align="center", actionButton("go", "Calculate Results")),
+  # titlePanel("Test Result"), textOutput("result"), titlePanel("Difference") 
+  
   
   #Blank row to move the picture down
   fluidRow(class = "myRow1"),
   tags$head(tags$style("
       .myRow1{height:80px;}")),
   
+  
+  
   #Picture display
   fluidRow(
+    column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prior_plot"))),
     column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot1"))),
-    column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot2"))),
-    column(4,  titlePanel("Hello Shiny!"), textOutput("result"))
+    column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot2")))
+  ),
+  #Extra parameter tuning
+  fluidRow(column(11,align="center", offset=-2, 
+                  titlePanel("Advanced Parameter Tuning"),
+                  style = "font-family: 'Arial', cursive;
+                             font-weight: bold; line-height: 2.1; 
+                             font-size: 30px; color: #4F3685;")),
+  
+  fluidRow(
+    column(3, align="center", numericInput(inputId = "prior_a_conv",
+                                                     label = "Variant A Prior Conversions",
+                                                     width="80%",
+                                                     value=1),
+           style = "font-size: 12px; line-height: 2.1;"),
+    column(3, align="center", numericInput(inputId = "prior_a_vol",
+                                                     label = "Variant A Prior Volume", 
+                                                     width="80%",
+                                                     value=2),
+           style = "font-size: 12px; line-height: 2.1;"),
+    column(3, align="center", numericInput(inputId = "prior_b_conv",
+                                                     label = "Variant B Prior Conversions",
+                                                     width="80%",
+                                                     value=1),
+           style = "font-size: 12px; line-height: 2.1;"),
+    column(3, align="center",numericInput(inputId =  "prior_b_vol",
+                                                     label = "Variant B Prior Volume",
+                                                     width="80%",
+                                                     value=2),
+           style = "font-size: 12px; line-height: 2.1;")
+  ),
+  
+  fluidRow(
+    column(3, align="center", numericInput(inputId = "rope",
+                                           label = "ROPE",
+                                           width="80%",
+                                           value=0)
+           )
     )
-             
 )
 
 server  <- function(input, output){
   
-  
-  
+  #Calculate test results based on input
   test.output <-eventReactive(input$go,{
-    bayesian_test(v1_success =  input$a_conv,
-                  v1_vol = input$a_vol,
-                  v2_success = input$b_conv,
-                  v2_vol = input$b_vol)
+    bayesian_test(prior1_success = input$prior_a_conv, prior1_vol = input$prior_a_vol,
+                  prior2_success = input$prior_b_conv, prior2_vol = input$prior_b_vol,
+                  v1_success =  input$a_conv, v1_vol = input$a_vol,
+                  v2_success = input$b_conv, v2_vol = input$b_vol,
+                  thresh = input$rope)
     
   })
 
+  output$prior_plot <-renderPlot({
+ 
+    rate <- seq(0,1,length=1000)
+    prior_a_dens <- dbeta(rate,  input$prior_a_conv,  input$prior_a_vol -  input$prior_a_conv)
+    prior_b_dens <- dbeta(rate,  input$prior_b_conv,  input$prior_b_vol -  input$prior_b_conv)
+    ggplot() + geom_line(aes(rate,prior_a_dens))+geom_line(aes(rate,prior_b_dens)) + 
+      scale_fill_discrete("Serologic response", 
+                          breaks=c("(10.1,79.9]","(79.9,150]"), 
+                          labels=c("double negative", "positive for a and/or b"))
+    
+  })
+  
   output$prob_plot2 <-renderPlot({
     
-    probs <- seq(0,1,length=1000)
     probability <- test.output()$dist
     if(probability[1]==0){
       groups <- c( "A Wins", "B Wins")
@@ -139,12 +201,10 @@ server  <- function(input, output){
   })
   
   output$prob_plot1 <-renderPlot({
-    cat(test.output()$dist)
-    probs <- seq(0,1,length=1000)
-    cat(test.output()$v1_beta.A, test.output()$v1_beta.B)
-    a_dens <- dbeta(probs, test.output()$v1_beta.A, test.output()$v1_beta.B)
-    b_dens <- dbeta(probs, test.output()$v2_beta.A, test.output()$v2_beta.B)
-    ggplot() + geom_line(aes(probs,a_dens, color="red"))+geom_line(aes(probs,b_dens, color="blue"))
+    rate <- seq(0,1,length=1000)
+    a_dens <- dbeta(rate, test.output()$v1_beta.A, test.output()$v1_beta.B)
+    b_dens <- dbeta(rate, test.output()$v2_beta.A, test.output()$v2_beta.B)
+    ggplot() + geom_line(aes(rate,a_dens, color="red"))+geom_line(aes(rate,b_dens, color="blue"))
 
   })
   
