@@ -2,7 +2,7 @@ library(shiny)
 library(ggplot2)
 
 
-bayesian_test <- function(prior_success=1, prior_vol=1, v1_success, v1_vol, v2_success, thresh=0, v2_vol, n.trials=100000){
+bayesian_test <- function(prior_success=1, prior_vol=2, v1_success, v1_vol, v2_success, v2_vol, thresh=0, n.trials=100000){
   
   #parameters for the posterior Beta distibution
   
@@ -34,12 +34,10 @@ bayesian_test <- function(prior_success=1, prior_vol=1, v1_success, v1_vol, v2_s
     winner = 2
   } else {
     winner = 0
-    return(val)
-    
   }
   results <- list("winner"=winner, 
                   "v1_beta.A"=v1_beta.A, "v1_beta.B"=v1_beta.B,
-                  "v2_beta.A"=v1_beta.A, "v2_beta.B"=v1_beta.B,
+                  "v2_beta.A"=v2_beta.A, "v2_beta.B"=v2_beta.B,
                   "dist"=results_p_dist, "diff"=map_diff)
   return(results)
   
@@ -71,24 +69,28 @@ ui<- fluidPage(
   #Numeric input boxes
   fluidRow(
             column(3, align="center",
-                   textInput(inputId =  "a_conv",
+                   numericInput(inputId =  "a_conv",
                              label = "Variant A Conversions",
-                             width="80%"),
+                             width="80%",
+                             value=1),
                    style = "font-size: 12px; line-height: 2.1;"),
             column(3, align="center",
-                   textInput(inputId =  "b_conv",
+                   numericInput(inputId =  "b_conv",
                              label = "Variant B Conversions",
-                             width="80%"),
+                             width="80%",
+                             value=1),
                    style = "font-size: 12px; line-height: 2.1;"),
             column(3, align="center",
-                   passwordInput(inputId =  "a_vol",
+                   numericInput(inputId =  "a_vol",
                                  label = "Variant A Volume",
-                                 width="80%"),
+                                 width="80%",
+                                 value=2),
                    style = "font-size: 12px; line-height: 2.1;"),
             column(3, align="center",
-                   passwordInput(inputId =  "b_vol",
+                   numericInput(inputId =  "b_vol",
                                  label = "Variant B Volume",
-                                 width="80%"),
+                                 width="80%",
+                                value=2),
                    style = "font-size: 12px; line-height: 2.1;")
       
   ),
@@ -102,42 +104,59 @@ ui<- fluidPage(
   
   #Picture display
   fluidRow(
-    column(1),
-    column(10,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot")),
-    column(1)
+    column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot1"))),
+    column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot2"))),
+    column(4,  titlePanel("Hello Shiny!"), textOutput("result"))
     )
              
-))
+)
 
 server  <- function(input, output){
   
-  probs <- seq(0,1,length=1000)
-  a_dens <- dbeta(probs, 200, 1000)
-  b_dens <- dbeta(probs, 250, 1000)
   
-  output$prob_plot <-renderPlot({
+  
+  test.output <-eventReactive(input$go,{
+    bayesian_test(v1_success =  input$a_conv,
+                  v1_vol = input$a_vol,
+                  v2_success = input$b_conv,
+                  v2_vol = input$b_vol)
+    
+  })
+
+  output$prob_plot2 <-renderPlot({
+    
+    probs <- seq(0,1,length=1000)
+    probability <- test.output()$dist
+    if(probability[1]==0){
+      groups <- c( "A Wins", "B Wins")
+      probability <- probability[2:3]
+    }else{
+      groups <- c("Draw", "A Wins", "B Wins")
+    }
+    
+    ggplot() + geom_bar(aes(groups, probability), stat="identity")
+    
+  })
+  
+  output$prob_plot1 <-renderPlot({
+    cat(test.output()$dist)
+    probs <- seq(0,1,length=1000)
+    cat(test.output()$v1_beta.A, test.output()$v1_beta.B)
+    a_dens <- dbeta(probs, test.output()$v1_beta.A, test.output()$v1_beta.B)
+    b_dens <- dbeta(probs, test.output()$v2_beta.A, test.output()$v2_beta.B)
     ggplot() + geom_line(aes(probs,a_dens, color="red"))+geom_line(aes(probs,b_dens, color="blue"))
 
   })
   
-  #when button pressed check entries are ok and if they are assign list of values to imagen
-  imagen <- eventReactive(input$go,{
-    validate(
-      need(as.single(input$age)>=18 & as.single(input$age)<=90, "Check the age you entered!")
-    )
-    validate(
-      need(as.single(input$children)>=0 & as.single(input$children)<10, "Check your entry for number of children!")
-    )
-    validate(
-      need(as.single(input$income)>0, "Check the income entered!")
-    )
-    validate(
-      need(as.single(input$houseprice)>50000, "Check the house price entered!")
-    )
-    list(age = as.single(input$age), income=as.single(input$income), children=as.single(input$children), houseprice=as.single(input$houseprice))
-  })
-  
-  #based on list of values choose whcih image to render
+  output$result <- renderText(if(which.max(test.output()$dist)==1 || round(test.output()$dist[2], 3)==round(test.output()$dist[3],3)){
+                                "DRAW"}
+                              else if(which.max(test.output()$dist)==2){
+                                "A WINS"}
+                              else if(which.max(test.output()$dist)==3){
+                                "B WINS"
+                              })
+
+                              
   
 }
 shinyAppDir(".")
