@@ -1,6 +1,7 @@
 library(shiny)
 library(ggplot2)
 
+# SECTION 1: define the bayesian test procedure #########################################################################################
 
 bayesian_test <- function(prior1_success=1, prior1_vol=2,
                           prior2_success=1, prior2_vol=2,
@@ -48,7 +49,7 @@ bayesian_test <- function(prior1_success=1, prior1_vol=2,
 }
 
 
-
+# SECTION 2: shiny ui #########################################################################################
 
 ui<- fluidPage(
   theme = "bootstrap.css",
@@ -167,6 +168,8 @@ ui<- fluidPage(
     )
 )
 
+# SECTION 2: shiny server #########################################################################################
+
 server  <- function(input, output){
   
   #Calculate test results based on input
@@ -178,17 +181,18 @@ server  <- function(input, output){
                   thresh = input$rope)
     
   })
-
+  #plot prior distributions
   output$prior_plot <-renderPlot({
  
     rate <- seq(0,1,length=1000)
     prior_a_dens <- dbeta(rate,  input$prior_a_conv,  input$prior_a_vol -  input$prior_a_conv)
     prior_b_dens <- dbeta(rate,  input$prior_b_conv,  input$prior_b_vol -  input$prior_b_conv)
     ggplot() + geom_line(aes(rate,prior_a_dens, color="A Prior"))+geom_line(aes(rate,prior_b_dens, color="B Prior")) +
-      scale_color_manual(name='', values = c('A Prior'='#00AEEF', 'B Prior'='#4F3685'))
+      scale_color_manual(name='', values = c('A Prior'='#00AEEF', 'B Prior'='#4F3685')) + 
+      labs(x="rate", y="probability density")
     
   })
-  
+  #plot test result probabilities
   output$prob_plot2 <-renderPlot({
     
     probability <- test.output()$dist
@@ -202,16 +206,17 @@ server  <- function(input, output){
     ggplot() + geom_bar(aes(groups, probability), stat="identity")
     
   })
-  
+  #plot posterior distributions 
   output$prob_plot1 <-renderPlot({
     rate <- seq(0,1,length=1000)
     a_dens <- dbeta(rate, test.output()$v1_beta.A, test.output()$v1_beta.B)
     b_dens <- dbeta(rate, test.output()$v2_beta.A, test.output()$v2_beta.B)
     ggplot() + geom_line(aes(rate,a_dens, color="A Posterior"))+geom_line(aes(rate,b_dens, color="B Posterior")) + 
-      scale_color_manual(name='', values = c('A Posterior'='#00AEEF', 'B Posterior'='#4F3685'))
+      scale_color_manual(name='', values = c('A Posterior'='#00AEEF', 'B Posterior'='#4F3685')) + 
+      labs(x="rate", y="probability density")
 
   })
-  
+  #print the test result
   output$result <- renderText(
     if(input$go>0){
       if(which.max(test.output()$dist)==1 || round(test.output()$dist[2], 3)==round(test.output()$dist[3],3)){
@@ -224,7 +229,7 @@ server  <- function(input, output){
       "Test Result:"
       }
     )
-
+  #print the MAP difference between the variants
   output$difference <- renderText({
     if(input$go>0){
       paste("Difference: ", round(test.output()$diff, digits=3))
