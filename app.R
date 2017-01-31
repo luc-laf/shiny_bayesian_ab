@@ -99,16 +99,15 @@ ui<- fluidPage(
   ),
   
   
-  fluidRow(column(4, titlePanel("Test Result="),  textOutput("result")),
-           column(4, titlePanel("Difference=")),
-           column(4, titlePanel("Difference")),
+  fluidRow(column(3, wellPanel(align="center", style = "overflow: hidden; border-color:  #4F3685; max-width:600px",  textOutput("result"))),
+           column(3, wellPanel(align="center", style = "overflow: hidden; border-color:  #4F3685; max-width:600px",  textOutput("difference"))),
+           column(6, align="center"),
            style = "font-family: 'Arial', cursive;
                     font-weight: bold; line-height: 2.1;" ),
   
   #Button to initate calculation
   column(12, align="center", actionButton("go", "Calculate Results")),
-  # titlePanel("Test Result"), textOutput("result"), titlePanel("Difference") 
-  
+
   
   #Blank row to move the picture down
   fluidRow(class = "myRow1"),
@@ -119,9 +118,15 @@ ui<- fluidPage(
   
   #Picture display
   fluidRow(
-    column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prior_plot"))),
-    column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot1"))),
-    column(4,align="center", wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  plotOutput("prob_plot2")))
+    column(4,align="center", 
+           wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  
+                     titlePanel("Prior"), plotOutput("prior_plot"))),
+    column(4,align="center", 
+           wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  
+                     titlePanel("Posterior"), plotOutput("prob_plot1"))),
+    column(4,align="center", 
+           wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  
+                     titlePanel("Results"), plotOutput("prob_plot2")))
   ),
   #Extra parameter tuning
   fluidRow(column(11,align="center", offset=-2, 
@@ -179,10 +184,8 @@ server  <- function(input, output){
     rate <- seq(0,1,length=1000)
     prior_a_dens <- dbeta(rate,  input$prior_a_conv,  input$prior_a_vol -  input$prior_a_conv)
     prior_b_dens <- dbeta(rate,  input$prior_b_conv,  input$prior_b_vol -  input$prior_b_conv)
-    ggplot() + geom_line(aes(rate,prior_a_dens))+geom_line(aes(rate,prior_b_dens)) + 
-      scale_fill_discrete("Serologic response", 
-                          breaks=c("(10.1,79.9]","(79.9,150]"), 
-                          labels=c("double negative", "positive for a and/or b"))
+    ggplot() + geom_line(aes(rate,prior_a_dens, color="A Prior"))+geom_line(aes(rate,prior_b_dens, color="B Prior")) +
+      scale_color_manual(name='', values = c('A Prior'='#00AEEF', 'B Prior'='#4F3685'))
     
   })
   
@@ -204,19 +207,31 @@ server  <- function(input, output){
     rate <- seq(0,1,length=1000)
     a_dens <- dbeta(rate, test.output()$v1_beta.A, test.output()$v1_beta.B)
     b_dens <- dbeta(rate, test.output()$v2_beta.A, test.output()$v2_beta.B)
-    ggplot() + geom_line(aes(rate,a_dens, color="red"))+geom_line(aes(rate,b_dens, color="blue"))
+    ggplot() + geom_line(aes(rate,a_dens, color="A Posterior"))+geom_line(aes(rate,b_dens, color="B Posterior")) + 
+      scale_color_manual(name='', values = c('A Posterior'='#00AEEF', 'B Posterior'='#4F3685'))
 
   })
   
-  output$result <- renderText(if(which.max(test.output()$dist)==1 || round(test.output()$dist[2], 3)==round(test.output()$dist[3],3)){
-                                "DRAW"}
-                              else if(which.max(test.output()$dist)==2){
-                                "A WINS"}
-                              else if(which.max(test.output()$dist)==3){
-                                "B WINS"
-                              })
+  output$result <- renderText(
+    if(input$go>0){
+      if(which.max(test.output()$dist)==1 || round(test.output()$dist[2], 3)==round(test.output()$dist[3],3)){
+      "Test Result: DRAW"}
+    else if(which.max(test.output()$dist)==2){
+      "Test Result: A WINS"}
+    else if(which.max(test.output()$dist)==3){
+     "Test Result: B WINS" }}
+    else{
+      "Test Result:"
+      }
+    )
 
-                              
+  output$difference <- renderText({
+    if(input$go>0){
+      paste("Difference: ", round(test.output()$diff, digits=3))
+    }else{
+      "Difference:"
+    }
+    })
   
 }
 shinyAppDir(".")
