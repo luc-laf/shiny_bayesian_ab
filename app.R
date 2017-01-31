@@ -219,7 +219,7 @@ server  <- function(input, output){
   #print the test result
   output$result <- renderText(
     if(input$go>0){
-      if(which.max(test.output()$dist)==1 || round(test.output()$dist[2], 3)==round(test.output()$dist[3],3)){
+      if(which.max(test.output()$dist)==1 || round(test.output()$dist[2], 3)==signif(test.output()$dist[3],3)){
       "Test Result: DRAW"}
     else if(which.max(test.output()$dist)==2){
       "Test Result: A WINS"}
@@ -232,7 +232,7 @@ server  <- function(input, output){
   #print the MAP difference between the variants
   output$difference <- renderText({
     if(input$go>0){
-      paste("Difference: ", round(test.output()$diff, digits=3))
+      paste("Difference: ", signif(test.output()$diff, 3))
     }else{
       "Difference:"
     }
