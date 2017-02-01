@@ -209,6 +209,10 @@ server  <- function(input, output){
   #plot posterior distributions 
   output$prob_plot1 <-renderPlot({
     rate <- seq(0,1,length=1000)
+    meanA <- test.output()$v1_beta.A/(test.output()$v1_beta.A+test.output()$v1_beta.B)
+    meanB <- test.output()$v2_beta.A/(test.output()$v2_beta.A+test.output()$v2_beta.B)
+    sdA <- 
+    
     a_dens <- dbeta(rate, test.output()$v1_beta.A, test.output()$v1_beta.B)
     b_dens <- dbeta(rate, test.output()$v2_beta.A, test.output()$v2_beta.B)
     ggplot() + geom_line(aes(rate,a_dens, color="A Posterior"))+geom_line(aes(rate,b_dens, color="B Posterior")) + 
