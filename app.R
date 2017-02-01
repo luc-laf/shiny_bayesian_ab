@@ -208,16 +208,24 @@ server  <- function(input, output){
   })
   #plot posterior distributions 
   output$prob_plot1 <-renderPlot({
-    rate <- seq(0,1,length=1000)
-    meanA <- test.output()$v1_beta.A/(test.output()$v1_beta.A+test.output()$v1_beta.B)
-    meanB <- test.output()$v2_beta.A/(test.output()$v2_beta.A+test.output()$v2_beta.B)
-    sdA <- 
+    rate <- seq(0,1,length=10000)
+    a_alpha <- test.output()$v1_beta.A
+    a_beta <- test.output()$v1_beta.B
+    b_alpha <- test.output()$v2_beta.A
+    b_beta <- test.output()$v2_beta.B
+    
+    #use distribution parameters to set limits of x axis, N.B. very approximate form of sdev due to integer overflow
+    mean_a <- a_alpha/(a_alpha+a_beta)
+    mean_b <- b_alpha/(b_alpha+b_beta)
+    sdev_a <- 3*sqrt(1/(a_alpha+b_beta))
+    sdev_b <- 3*sqrt(1/(a_alpha+b_beta))
+
     
     a_dens <- dbeta(rate, test.output()$v1_beta.A, test.output()$v1_beta.B)
     b_dens <- dbeta(rate, test.output()$v2_beta.A, test.output()$v2_beta.B)
     ggplot() + geom_line(aes(rate,a_dens, color="A Posterior"))+geom_line(aes(rate,b_dens, color="B Posterior")) + 
       scale_color_manual(name='', values = c('A Posterior'='#00AEEF', 'B Posterior'='#4F3685')) + 
-      labs(x="rate", y="probability density")
+      labs(x="rate", y="probability density") + xlim(max(min(mean_a,mean_b)-max(sdev_a,sdev_b),0), min(max(mean_a,mean_b)+max(sdev_a,sdev_b),1))
 
   })
   #print the test result
