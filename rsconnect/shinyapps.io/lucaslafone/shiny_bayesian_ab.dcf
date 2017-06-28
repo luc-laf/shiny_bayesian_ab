@@ -2,8 +2,8 @@ name: shiny_bayesian_ab
 account: lucaslafone
 server: shinyapps.io
 appId: 154269
-bundleId: 697168
+bundleId: 885065
 url: https://lucaslafone.shinyapps.io/shiny_bayesian_ab/
-when: 1485945037.39513
+when: 1498646517.61647
 asMultiple: FALSE
 asStatic: FALSE

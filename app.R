@@ -52,13 +52,13 @@ bayesian_test <- function(prior1_success=1, prior1_vol=2,
 # SECTION 2: shiny ui #########################################################################################
 
 ui<- fluidPage(
-  theme = "bootstrap.css",
-  
+  #theme = "bootstrap.css",
+  includeCSS("styles.css"),
   #set some styles for the page
-  tags$head(tags$style(HTML(".shiny-output-error-validation { color: white; font-size: 30px}"))),
-  tags$head(tags$style(HTML("div#myDiv label { width: 20%; }
-                           div#myDiv input { display: inline-block; width: 80%;}"))),
-  
+  #tags$head(tags$style(HTML(".shiny-output-error-validation { color: white; font-size: 30px}"))),
+  #tags$head(tags$style(HTML("div#myDiv label { width: 20%; }
+                          # div#myDiv input { display: inline-block; width: 80%;}"))),
+ 
   #Title and logo
   fluidRow(column(11,align="center", offset=-2, 
                   titlePanel(title=div(img(height="110px",
@@ -67,43 +67,72 @@ ui<- fluidPage(
                              "Bayesian A/B Test",
                              style = "font-family: 'Arial', cursive;
                                       font-weight: bold; line-height: 2.1; 
-                                      font-size: 30px; color: #4F3685;")))),
+                                      font-size: 40px; color: #4F3685;")))),
 
 
   #Numeric input boxes
   fluidRow(
-            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",
-                   numericInput(inputId =  "a_conv",
-                             label = "Variant A Conversions",
-                             width="80%",
-                             value=10)),
-                   style = "font-size: 12px; line-height: 2.1;"),
-            column(3, align="center",wellPanel(align="left", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",
-                   numericInput(inputId =  "a_vol",
-                                label = "Variant A Volume", 
-                                width="80%",
-                                value=20)),
-                   style = "font-size: 12px; line-height: 2.1;"),
-            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #4F3685; max-width:600px",
-                   numericInput(inputId =  "b_conv",
-                             label = "Variant B Conversions",
-                             width="80%",
-                             value=5)),
-                   style = "font-size: 12px; line-height: 2.1;"),
-            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #4F3685; max-width:600px",
-                   numericInput(inputId =  "b_vol",
-                                 label = "Variant B Volume",
-                                 width="80%",
-                                value=20)),
-                   style = "font-size: 12px; line-height: 2.1;")
+            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #4F3685; max-width:600px; 
+                                                font-family: 'Arial', cursive;
+                                                font-weight: bold; line-height: 2.1; 
+                                                font-size: 20px; color: #FFFFFF;",
+                                                numericInput(inputId =  "a_conv",
+                                                             label = "Variant A Conversions",
+                                                             width="80%",
+                                                             value=10)
+            ),
+            style = "font-size: 12px; line-height: 2.1;"
+            ),
+            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #4F3685; max-width:600px; 
+                                                font-family: 'Arial', cursive;
+                                                font-weight: bold; line-height: 2.1; 
+                                                font-size: 20px; color: #FFFFFF;",
+                                                numericInput(inputId =  "a_vol",
+                                                             label = "Variant A Volume",
+                                                             width="80%",
+                                                             value=20)
+                                                ),
+                   style = "font-size: 12px; line-height: 2.1;"
+            ),
+            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #4F3685; max-width:600px; 
+                                                font-family: 'Arial', cursive;
+                                                font-weight: bold; line-height: 2.1; 
+                                                font-size: 20px; color: #FFFFFF;",
+                                                numericInput(inputId =  "b_conv",
+                                                             label = "Variant B Conversions",
+                                                             width="80%",
+                                                             value=15)
+                                                ),
+            style = "font-size: 12px; line-height: 2.1;"
+            ),
+            column(3, align="center", wellPanel(align="left", style = "overflow: hidden; background-color:  #4F3685; max-width:600px; 
+                                                font-family: 'Arial', cursive;
+                                                font-weight: bold; line-height: 2.1; 
+                                                font-size: 20px; color: #FFFFFF;",
+                                                numericInput(inputId =  "b_vol",
+                                                             label = "Variant B Volume",
+                                                             width="80%",
+                                                             value=20)
+                                                ),
+                   style = "font-size: 12px; line-height: 2.1;"
+                   )
       
   ),
   
   
-  fluidRow(column(3, wellPanel(align="center", style = "overflow: hidden; border-color:  #4F3685; max-width:600px",  textOutput("result"))),
-           column(3, wellPanel(align="center", style = "overflow: hidden; border-color:  #4F3685; max-width:600px",  textOutput("difference"))),
-           column(6, align="center"),
-           style = "font-family: 'Arial', cursive;
+  fluidRow(column(6, align="center", 
+                     wellPanel(align="center", 
+                               style = "overflow: hidden; border-color:  #4F3685; max-width:600px; font-family: 'Arial', cursive;
+                                        font-weight: bold; line-height: 2.1; 
+                                        font-size: 20px;",  
+                               textOutput("result"))),
+           column(6, align="center",
+                     wellPanel(align="center",
+                               style = "overflow: hidden; border-color:  #4F3685; max-width:600px; font-family: 'Arial', cursive;
+                                        font-weight: bold; line-height: 2.1; 
+                                        font-size: 20px;",  
+                               textOutput("difference"))),
+           style = "font-family: 'Arial', cursive; 
                     font-weight: bold; line-height: 2.1;" ),
   
   #Button to initate calculation
@@ -119,14 +148,16 @@ ui<- fluidPage(
   
   #Picture display
   fluidRow(
-    column(4,align="center", 
-           wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  
-                     titlePanel("Prior"), plotOutput("prior_plot"))),
-    column(4,align="center", 
-           wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  
+
+    column(6,align="center", 
+           wellPanel(align="center", style = "font-family: 'Arial', cursive;
+                                      font-weight: bold; line-height: 2.1; 
+                                      font-size: 30px; color: #FFFFFF; overflow: hidden; background-color:  #00AEEF; max-width:600px",  
                      titlePanel("Posterior"), plotOutput("prob_plot1"))),
-    column(4,align="center", 
-           wellPanel(align="center", style = "overflow: hidden; background-color:  #00AEEF; max-width:600px",  
+    column(6,align="center", 
+           wellPanel(align="center", style = "font-family: 'Arial', cursive;
+                                      font-weight: bold; line-height: 2.1; 
+                                      font-size: 30px; color: #FFFFFF; overflow: hidden; background-color:  #00AEEF; max-width:600px",  
                      titlePanel("Results"), plotOutput("prob_plot2")))
   ),
   #Extra parameter tuning
@@ -203,9 +234,12 @@ server  <- function(input, output){
       groups <- c("Draw", "A Wins", "B Wins")
     }
     
-    ggplot() + geom_bar(aes(groups, probability), stat="identity")
+    ggplot() + geom_bar(aes(groups, probability), stat="identity") +theme(axis.text=element_text(size=12),
+                                                                          axis.title=element_text(size=14,face="bold")) + labs(x="", y="Probability")
     
   })
+  
+
   #plot posterior distributions 
   output$prob_plot1 <-renderPlot({
     rate <- seq(0,1,length=10000)
@@ -225,7 +259,9 @@ server  <- function(input, output){
     b_dens <- dbeta(rate, test.output()$v2_beta.A, test.output()$v2_beta.B)
     ggplot() + geom_line(aes(rate,a_dens, color="A Posterior"))+geom_line(aes(rate,b_dens, color="B Posterior")) + 
       scale_color_manual(name='', values = c('A Posterior'='#00AEEF', 'B Posterior'='#4F3685')) + 
-      labs(x="rate", y="probability density") + xlim(max(min(mean_a,mean_b)-max(sdev_a,sdev_b),0), min(max(mean_a,mean_b)+max(sdev_a,sdev_b),1))
+      labs(x="Rate", y="Probability density") + xlim(max(min(mean_a,mean_b)-max(sdev_a,sdev_b),0), min(max(mean_a,mean_b)+max(sdev_a,sdev_b),1)) +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"))
 
   })
   #print the test result
